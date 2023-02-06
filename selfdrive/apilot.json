@@ -490,6 +490,16 @@
       "max": 100,
       "default": 30,
       "unit": 10
+    },
+    {
+      "group": "시작",
+      "name": "InitMyDrivingMode",
+      "title": "드라이브모드:초기값(3)",
+      "descr": "1:연비,2:안전,3:일반,4:고속(신호무시)",
+      "min": 1,
+      "max": 4,
+      "default": 3,
+      "unit": 1
     }
 
   ]
