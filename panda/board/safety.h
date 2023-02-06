@@ -417,6 +417,10 @@ bool dist_to_meas_check(int val, int val_last, struct sample_t *val_meas,
   return (val < lowest_allowed) || (val > highest_allowed);
 }
 
+void _puth(int val) {
+    if (val < 0) { print("-"); val = -val; }
+    puth4(val);
+}
 // check that commanded value isn't fighting against driver
 bool driver_limit_check(int val, int val_last, struct sample_t *val_driver,
                         const int MAX_VAL, const int MAX_RATE_UP, const int MAX_RATE_DOWN,
@@ -437,6 +441,11 @@ bool driver_limit_check(int val, int val_last, struct sample_t *val_driver,
                                            MIN(driver_min_limit, 0)));
 
   // check for violation
+  if ((val < lowest_allowed) || (val > highest_allowed)) {
+      print("driver_limit_check: "); _puth(lowest_allowed); print(" < "); _puth(val); print(" < "); _puth(highest_allowed); print("last="); _puth(val_last); print("\n");
+      print("hl_rl="); _puth(highest_allowed_rl); print(" ");  _puth(lowest_allowed_rl); print("\n");
+      print("dr_mx="); _puth(driver_max_limit); print(" ");  _puth(driver_min_limit); print("\n");
+  }
   return (val < lowest_allowed) || (val > highest_allowed);
 }
 
@@ -596,8 +605,12 @@ bool steer_torque_cmd_checks(int desired_torque, int steer_req, const SteeringLi
   if (violation || !controls_allowed) {
     valid_steer_req_count = 0;
     invalid_steer_req_count = 0;
-    desired_torque_last = 0;
-    rt_torque_last = 0;
+
+    // 제어중이라면.... 이전값은 기억하고 있어야하지 않을까?
+    if (!controls_allowed) {
+        desired_torque_last = 0;
+        rt_torque_last = 0;
+    }
     ts_torque_check_last = ts;
     ts_steer_req_mismatch_last = ts;
   }

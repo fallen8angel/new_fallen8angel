@@ -7,7 +7,7 @@ from common.realtime import DT_CTRL
 from common.conversions import Conversions as CV
 from selfdrive.car.hyundai.values import Buttons
 from common.params import Params
-from selfdrive.controls.lib.drive_helpers import V_CRUISE_MAX, V_CRUISE_MIN, V_CRUISE_DELTA_KM, V_CRUISE_DELTA_MI
+from selfdrive.controls.lib.drive_helpers import V_CRUISE_MAX, V_CRUISE_MIN
 from selfdrive.controls.lib.lateral_planner import TRAJECTORY_SIZE
 #from selfdrive.controls.lib.longitudinal_mpc_lib.long_mpc import AUTO_TR_CRUISE_GAP
 from selfdrive.car.hyundai.values import CAR
@@ -76,10 +76,13 @@ class CruiseHelper:
     self.update_params_count = 0
 
     self.longCruiseGap = int(Params().get("PrevCruiseGap"))
+    self.cruiseSpeedMin = int(Params().get("CruiseSpeedMin"))
 
     self.autoCurveSpeedCtrl = int(Params().get("AutoCurveSpeedCtrl"))
     self.autoCurveSpeedFactor = float(int(Params().get("AutoCurveSpeedFactor", encoding="utf8")))*0.01
     self.autoNaviSpeedCtrl = int(Params().get("AutoNaviSpeedCtrl"))
+    self.autoNaviSpeedCtrlStart = float(Params().get("AutoNaviSpeedCtrlStart"))
+    self.autoNaviSpeedCtrlEnd = float(Params().get("AutoNaviSpeedCtrlEnd"))
     self.autoRoadLimitCtrl = int(Params().get("AutoRoadLimitCtrl", encoding="utf8"))
     self.naviSpeedLimitDecelRate = float(Params().get("NaviSpeedLimitDecelRate", encoding="utf8"))*0.01
     #self.naviDecelMarginDist = float(int(Params().get("NaviDecelMarginDist", encoding="utf8")))
@@ -155,7 +158,11 @@ class CruiseHelper:
       elif self.update_params_count == 13:
         self.steerActuatorDelay = float(int(Params().get("SteerActuatorDelay", encoding="utf8"))) / 100.
         self.steerActuatorDelayLow = float(int(Params().get("SteerActuatorDelayLow", encoding="utf8"))) / 100.
-
+      elif self.update_params_count == 14:
+        self.cruiseSpeedMin = int(Params().get("CruiseSpeedMin"))
+      elif self.update_params_count == 15:
+        self.autoNaviSpeedCtrlStart = float(Params().get("AutoNaviSpeedCtrlStart"))
+        self.autoNaviSpeedCtrlEnd = float(Params().get("AutoNaviSpeedCtrlEnd"))
 
   def getSteerActuatorDelay(self, v_ego):
     v_ego_kph = v_ego * 3.6
@@ -299,7 +306,7 @@ class CruiseHelper:
           ButtonCnt = 0
       if ButtonCnt > 30:
         LongPressed = True
-        V_CRUISE_DELTA = V_CRUISE_DELTA_KM if metric else V_CRUISE_DELTA_MI
+        V_CRUISE_DELTA = 10
         if ButtonPrev == ButtonType.accelCruise:
           v_cruise_kph += V_CRUISE_DELTA - v_cruise_kph % V_CRUISE_DELTA
           button_type = ButtonType.accelCruise
@@ -311,7 +318,7 @@ class CruiseHelper:
         elif ButtonPrev == ButtonType.gapAdjustCruise:
           button_type = ButtonType.gapAdjustCruise
           ButtonCnt = 0
-    v_cruise_kph = clip(v_cruise_kph, MIN_SET_SPEED_KPH, MAX_SET_SPEED_KPH)
+    v_cruise_kph = clip(v_cruise_kph, self.cruiseSpeedMin, MAX_SET_SPEED_KPH)
     return button_type, LongPressed, v_cruise_kph
 
   def update_speed_navi(self, CS, controls, v_cruise_kph):
@@ -332,7 +339,7 @@ class CruiseHelper:
     road_speed_limiter = get_road_speed_limiter()
     self.ndaActive = 1 if road_speed_limiter_get_active() > 0 else 0
     apply_limit_speed, road_limit_speed, left_dist, first_started, max_speed_log = \
-      road_speed_limiter.get_max_speed(clu11_speed, True) #self.is_metric)
+      road_speed_limiter.get_max_speed(clu11_speed, True, self.autoNaviSpeedCtrlStart, self.autoNaviSpeedCtrlEnd) #self.is_metric)
 
     self.active_cam = road_limit_speed > 0 and left_dist > 0
 
@@ -352,7 +359,7 @@ class CruiseHelper:
   def update_speed_curve(self, CS, controls):
     curve_speed = self.cal_curve_speed(controls, CS.vEgo, controls.sm.frame, self.curve_speed_last)
     self.curve_speed_last = curve_speed
-    return clip(curve_speed * CV.MS_TO_KPH, MIN_SET_SPEED_KPH, MAX_SET_SPEED_KPH)
+    return clip(curve_speed * CV.MS_TO_KPH, MIN_CURVE_SPEED, MAX_SET_SPEED_KPH)
 
   def v_cruise_speed_up(self, v_cruise_kph, roadSpeed):
     if v_cruise_kph < roadSpeed:
@@ -362,7 +369,7 @@ class CruiseHelper:
         if v_cruise_kph < speed:
           v_cruise_kph = speed
           break
-    return clip(v_cruise_kph, MIN_SET_SPEED_KPH, MAX_SET_SPEED_KPH)
+    return clip(v_cruise_kph, self.cruiseSpeedMin, MAX_SET_SPEED_KPH)
 
   def update_v_cruise_apilot(self, v_cruise_kph, buttonEvents, enabled, metric, controls, CS):
     frame = controls.sm.frame
@@ -374,7 +381,7 @@ class CruiseHelper:
     curveSpeed = self.update_speed_curve(CS, controls) ## longitudinal_control로 이동함.. 호출해봐야 안됨..
 
     v_ego_kph = int(CS.vEgo * CV.MS_TO_KPH + 0.5) + 2.0 #실제속도가 v_cruise_kph보다 조금 빨라 2을 더함.
-    v_ego_kph_set = clip(v_ego_kph, MIN_SET_SPEED_KPH, MAX_SET_SPEED_KPH)
+    v_ego_kph_set = clip(v_ego_kph, self.cruiseSpeedMin, MAX_SET_SPEED_KPH)
     xState = controls.sm['longitudinalPlan'].xState
     dRel, vRel = self.get_lead_rel(controls)
     resume_cond = abs(CS.steeringAngleDeg) < 20 # and not CS.steeringPressed
@@ -455,7 +462,7 @@ class CruiseHelper:
               v_cruise_kph = 3
               self.cruise_control(controls, CS, -1)
               pass
-            elif v_cruise_kph > v_ego_kph_set+1 and self.cruiseButtonMode in [1,2]:
+            elif v_cruise_kph > v_ego_kph_set+2 and self.cruiseButtonMode in [1,2]:
               v_cruise_kph = v_ego_kph_set
               self.v_cruise_kph_backup = v_cruise_kph #버튼으로할땐 백업
             else:
@@ -465,9 +472,12 @@ class CruiseHelper:
               else:
                 v_cruise_kph = buttonSpeed
                 self.v_cruise_kph_backup = v_cruise_kph
-        elif button == ButtonType.gapAdjustCruise:
-          if self.longActiveUser > 0 and self.gapButtonMode == 3:
+        elif button == ButtonType.gapAdjustCruise and self.gapButtonMode == 3:
+          if self.longActiveUser > 0: # and self.gapButtonMode == 3:
             self.cruise_control(controls, CS, -1)
+          else:
+            self.cruise_control(controls, CS, 1)
+            v_cruise_kph = max(v_cruise_kph, self.v_cruise_kph_backup, v_ego_kph_set) #브레이크를 밟기전 속도로 복원..
 
       ###### gas, brake관련 처리...
       if CS.brakePressed:
@@ -521,11 +531,11 @@ class CruiseHelper:
         # 브레이크해제 켜지고, 크루즈갭이 5가 아닌경우에만 작동.
         elif self.autoResumeFromBrakeRelease and self.longCruiseGap != 5: # 브레이크 해제에 대한 크루즈 ON
           # 주행중, 전방차량이 20M(변수)이내이면
-          if resume_cond and v_ego_kph > 1.0 and 0 < self.autoResumeFromBrakeReleaseDist < dRel:
-            v_cruise_kph = v_ego_kph_set  # 현재속도로 세트~
+          if resume_cond and v_ego_kph >= 3.0 and 0 < self.autoResumeFromBrakeReleaseDist < dRel and CS.rightBlinker == False:
+            #v_cruise_kph = v_ego_kph_set  # 현재속도로 세트~
             self.cruise_control(controls, CS, 3)
           # 70km/h미만, 신호정지신호, 직선도로인경우
-          elif v_ego_kph < 70.0 and xState == XState.e2eStop and abs(self.position_y) < 5.0 and self.autoResumeFromBrakeReleaseTrafficSign:
+          elif v_ego_kph < 70.0 and xState == XState.e2eStop and abs(self.position_y) < 5.0 and self.autoResumeFromBrakeReleaseTrafficSign and CS.rightBlinker == False:
             v_cruise_kph = v_ego_kph_set  
             self.cruise_control(controls, CS, 3)
           # 전방차량이 없고, 속도가 40km/h(변수) 이상인경우
