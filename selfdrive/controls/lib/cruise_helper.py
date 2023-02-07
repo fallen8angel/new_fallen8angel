@@ -76,6 +76,7 @@ class CruiseHelper:
     self.update_params_count = 0
 
     self.longCruiseGap = int(Params().get("PrevCruiseGap"))
+    self.cruiseSpeedMin = int(Params().get("CruiseSpeedMin"))
 
     self.autoCurveSpeedCtrl = int(Params().get("AutoCurveSpeedCtrl"))
     self.autoCurveSpeedFactor = float(int(Params().get("AutoCurveSpeedFactor", encoding="utf8")))*0.01
@@ -155,7 +156,8 @@ class CruiseHelper:
       elif self.update_params_count == 13:
         self.steerActuatorDelay = float(int(Params().get("SteerActuatorDelay", encoding="utf8"))) / 100.
         self.steerActuatorDelayLow = float(int(Params().get("SteerActuatorDelayLow", encoding="utf8"))) / 100.
-
+      elif self.update_params_count == 14:
+        self.cruiseSpeedMin = int(Params().get("CruiseSpeedMin"))
 
   def getSteerActuatorDelay(self, v_ego):
     v_ego_kph = v_ego * 3.6
@@ -311,7 +313,7 @@ class CruiseHelper:
         elif ButtonPrev == ButtonType.gapAdjustCruise:
           button_type = ButtonType.gapAdjustCruise
           ButtonCnt = 0
-    v_cruise_kph = clip(v_cruise_kph, MIN_SET_SPEED_KPH, MAX_SET_SPEED_KPH)
+    v_cruise_kph = clip(v_cruise_kph, self.cruiseSpeedMin, MAX_SET_SPEED_KPH)
     return button_type, LongPressed, v_cruise_kph
 
   def update_speed_navi(self, CS, controls, v_cruise_kph):
@@ -352,7 +354,7 @@ class CruiseHelper:
   def update_speed_curve(self, CS, controls):
     curve_speed = self.cal_curve_speed(controls, CS.vEgo, controls.sm.frame, self.curve_speed_last)
     self.curve_speed_last = curve_speed
-    return clip(curve_speed * CV.MS_TO_KPH, MIN_SET_SPEED_KPH, MAX_SET_SPEED_KPH)
+    return clip(curve_speed * CV.MS_TO_KPH, MIN_CURVE_SPEED, MAX_SET_SPEED_KPH)
 
   def v_cruise_speed_up(self, v_cruise_kph, roadSpeed):
     if v_cruise_kph < roadSpeed:
@@ -362,7 +364,7 @@ class CruiseHelper:
         if v_cruise_kph < speed:
           v_cruise_kph = speed
           break
-    return clip(v_cruise_kph, MIN_SET_SPEED_KPH, MAX_SET_SPEED_KPH)
+    return clip(v_cruise_kph, self.cruiseSpeedMin, MAX_SET_SPEED_KPH)
 
   def update_v_cruise_apilot(self, v_cruise_kph, buttonEvents, enabled, metric, controls, CS):
     frame = controls.sm.frame
@@ -374,7 +376,7 @@ class CruiseHelper:
     curveSpeed = self.update_speed_curve(CS, controls) ## longitudinal_control로 이동함.. 호출해봐야 안됨..
 
     v_ego_kph = int(CS.vEgo * CV.MS_TO_KPH + 0.5) + 2.0 #실제속도가 v_cruise_kph보다 조금 빨라 2을 더함.
-    v_ego_kph_set = clip(v_ego_kph, MIN_SET_SPEED_KPH, MAX_SET_SPEED_KPH)
+    v_ego_kph_set = clip(v_ego_kph, self.cruiseSpeedMin, MAX_SET_SPEED_KPH)
     xState = controls.sm['longitudinalPlan'].xState
     dRel, vRel = self.get_lead_rel(controls)
     resume_cond = abs(CS.steeringAngleDeg) < 20 # and not CS.steeringPressed

@@ -511,8 +511,8 @@ class Controls:
         self.v_cruise_helper.v_cruise_kph = self.cruise_helper.update_v_cruise_apilot(self.v_cruise_helper.v_cruise_kph, CS.buttonEvents, self.enabled, self.is_metric, self, CS)
         self.v_cruise_helper.v_cruise_cluster_kph = self.v_cruise_helper.v_cruise_kph
     else:
-      self.v_cruise_helper.v_cruise_kph = 30#V_CRUISE_INITIAL
-      self.v_cruise_helper.v_cruise_cluster_kph = 30#V_CRUISE_INITIAL
+      self.v_cruise_helper.v_cruise_kph = self.cruise_helper.cruiseSpeedMin #30#V_CRUISE_INITIAL
+      self.v_cruise_helper.v_cruise_cluster_kph = self.cruise_helper.cruiseSpeedMin #30#V_CRUISE_INITIAL
 
     # decrement the soft disable timer at every step, as it's reset on
     # entrance in SOFT_DISABLING state

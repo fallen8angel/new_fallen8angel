@@ -203,6 +203,16 @@
     },
     {
       "group": "자동크루즈",
+      "name": "CruiseSpeedMin",
+      "title": "크루즈 최저속도(10)",
+      "descr": "크루즈제어의 최저속도",
+      "min": 10,
+      "max": 50,
+      "default": 10,
+      "unit": 1
+    },
+    {
+      "group": "자동크루즈",
       "name": "AutoResumeFromGas",
       "title": "엑셀크루즈ON: 사용",
       "descr": "",
