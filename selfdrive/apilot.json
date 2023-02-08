@@ -114,7 +114,7 @@
     {
       "group": "가속설정",
       "name": "CruiseMaxVals1",
-      "title": "가속설정:0km/h(200)",
+      "title": "가속설정1:0km/h(200)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 300,
@@ -124,7 +124,7 @@
     {
       "group": "가속설정",
       "name": "CruiseMaxVals2",
-      "title": "가속설정:40km/h(140)",
+      "title": "가속설정2:40km/h(140)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 300,
@@ -134,7 +134,7 @@
     {
       "group": "가속설정",
       "name": "CruiseMaxVals3",
-      "title": "가속설정:70km/h(50)",
+      "title": "가속설정3:70km/h(50)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 300,
@@ -144,7 +144,7 @@
     {
       "group": "가속설정",
       "name": "CruiseMaxVals4",
-      "title": "가속설정:100km/h(20)",
+      "title": "가속설정4:100km/h(20)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 300,
@@ -154,7 +154,7 @@
     {
       "group": "가속설정",
       "name": "CruiseMaxVals5",
-      "title": "가속설정:140km/h(15)",
+      "title": "가속설정5:140km/h(15)",
       "descr": "가속도를 설정합니다. (x0.01m/s^2)",
       "min": 1,
       "max": 300,
