@@ -591,9 +591,9 @@ class LongitudinalMpc:
       self.cruiseButtonCounter = controls.cruiseButtonCounter
 
       stop_x = model_x
-      # 신호감지시 정지 x를 40키로속도로 정지할수 있는 거리로 조작해주어 미리 속도를 줄여주는 효과를 얻어보자... 시험.
+      # 신호감지시 정지 x를 50키로속도로 정지할수 있는 거리로 조작해주어 미리 속도를 줄여주는 효과를 얻어보자... 시험.
       if self.xState == XState.e2eStop:
-        decel_x = get_safe_obstacle_distance(40.0 * CV.KPH_TO_MS, self.t_follow, self.comfort_brake, applyStopDistance)
+        decel_x = get_safe_obstacle_distance(50.0 * CV.KPH_TO_MS, self.t_follow, self.comfort_brake, applyStopDistance)
         if model_x > decel_x:
           stop_x = decel_x
       x2 = stop_x * np.ones(N+1) + self.trafficStopDistanceAdjust
