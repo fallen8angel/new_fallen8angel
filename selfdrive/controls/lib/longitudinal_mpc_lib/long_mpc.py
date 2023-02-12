@@ -589,7 +589,14 @@ class LongitudinalMpc:
       self.comfort_brake *= mySafeModeFactor
       self.longActiveUser = controls.longActiveUser
       self.cruiseButtonCounter = controls.cruiseButtonCounter
-      x2 = model_x * np.ones(N+1) + self.trafficStopDistanceAdjust
+
+      stop_x = model_x
+      # 신호감지시 정지 x를 50키로속도로 정지할수 있는 거리로 조작해주어 미리 속도를 줄여주는 효과를 얻어보자... 시험.
+      if self.xState == XState.e2eStop:
+        decel_x = get_safe_obstacle_distance(50.0 * CV.KPH_TO_MS, self.t_follow, self.comfort_brake, applyStopDistance)
+        if model_x > decel_x:
+          stop_x = decel_x
+      x2 = stop_x * np.ones(N+1) + self.trafficStopDistanceAdjust
 
       # Fake an obstacle for cruise, this ensures smooth acceleration to set speed
       # when the leads are no factor.
