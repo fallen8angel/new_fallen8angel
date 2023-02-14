@@ -462,7 +462,7 @@ class CruiseHelper:
               v_cruise_kph = 3
               self.cruise_control(controls, CS, -1)
               pass
-            elif v_cruise_kph > v_ego_kph_set+1 and self.cruiseButtonMode in [1,2]:
+            elif v_cruise_kph > v_ego_kph_set+2 and self.cruiseButtonMode in [1,2]:
               v_cruise_kph = v_ego_kph_set
               self.v_cruise_kph_backup = v_cruise_kph #버튼으로할땐 백업
             else:
