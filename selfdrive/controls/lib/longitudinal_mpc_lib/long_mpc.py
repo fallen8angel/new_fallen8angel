@@ -560,11 +560,9 @@ class LongitudinalMpc:
         self.trafficState = 0
 
       fakeCruiseDistance = 0.0
-      if controls.longActiveUser <= 0 and self.xState != XState.softHold:
-          self.xState = XState.cruise
 
       #3단계: 조건에 따른. 감속및 주행.
-      if self.xState in [XState.lead, XState.cruise] or self.e2ePaused:
+      if self.xState in [XState.lead, XState.cruise] or self.e2ePaused or controls.longActiveUser<=0:
         model_x = 1000.0
       elif self.xState == XState.e2eCruise:
         if carstate.gasPressed:
