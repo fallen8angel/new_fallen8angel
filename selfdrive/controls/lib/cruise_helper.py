@@ -7,7 +7,7 @@ from common.realtime import DT_CTRL
 from common.conversions import Conversions as CV
 from selfdrive.car.hyundai.values import Buttons
 from common.params import Params
-from selfdrive.controls.lib.drive_helpers import V_CRUISE_MAX, V_CRUISE_MIN, V_CRUISE_DELTA_KM, V_CRUISE_DELTA_MI
+from selfdrive.controls.lib.drive_helpers import V_CRUISE_MAX, V_CRUISE_MIN
 from selfdrive.controls.lib.lateral_planner import TRAJECTORY_SIZE
 #from selfdrive.controls.lib.longitudinal_mpc_lib.long_mpc import AUTO_TR_CRUISE_GAP
 from selfdrive.car.hyundai.values import CAR
@@ -306,7 +306,7 @@ class CruiseHelper:
           ButtonCnt = 0
       if ButtonCnt > 30:
         LongPressed = True
-        V_CRUISE_DELTA = V_CRUISE_DELTA_KM if metric else V_CRUISE_DELTA_MI
+        V_CRUISE_DELTA = 1
         if ButtonPrev == ButtonType.accelCruise:
           v_cruise_kph += V_CRUISE_DELTA - v_cruise_kph % V_CRUISE_DELTA
           button_type = ButtonType.accelCruise
