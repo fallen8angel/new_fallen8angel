@@ -472,9 +472,12 @@ class CruiseHelper:
               else:
                 v_cruise_kph = buttonSpeed
                 self.v_cruise_kph_backup = v_cruise_kph
-        elif button == ButtonType.gapAdjustCruise:
-          if self.longActiveUser > 0 and self.gapButtonMode == 3:
+        elif button == ButtonType.gapAdjustCruise and self.gapButtonMode == 3:
+          if self.longActiveUser > 0: # and self.gapButtonMode == 3:
             self.cruise_control(controls, CS, -1)
+          else:
+            self.cruise_control(controls, CS, 1)
+            v_cruise_kph = max(v_cruise_kph, self.v_cruise_kph_backup, v_ego_kph_set) #브레이크를 밟기전 속도로 복원..
 
       ###### gas, brake관련 처리...
       if CS.brakePressed:
