@@ -549,7 +549,7 @@ class LongitudinalMpc:
         else:
           if self.status:
             self.xState = XState.lead
-          elif self.trafficState == 1 and not self.e2ePaused:                 #신호인식이 되면 정지모드
+          elif self.trafficState == 1 and not self.e2ePaused and not carstate.gasPressed:                 #신호인식이 되면 정지모드
             self.buttonStopDist = 0
             self.xState = XState.e2eStop
           else:
