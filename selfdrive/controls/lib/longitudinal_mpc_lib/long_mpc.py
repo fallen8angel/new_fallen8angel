@@ -591,7 +591,13 @@ class LongitudinalMpc:
       self.comfort_brake *= mySafeModeFactor
       self.longActiveUser = controls.longActiveUser
       self.cruiseButtonCounter = controls.cruiseButtonCounter
-      x2 = model_x * np.ones(N+1) + self.trafficStopDistanceAdjust
+
+      stop_x = model_x
+      # 급격히 정지하는 걸 막아보자~ 시험.
+      if self.xState == XState.e2eStop and model_x < 3.0: # 신호정지이고 3M이내이면.. 급정거... 최소거리확보해야할... test
+        stop_x = max(v_ego * v_ego / (1.0 * 2), model_x)  # -1 m/s^2으로 감속할때 정지거리..
+
+      x2 = stop_x * np.ones(N+1) + self.trafficStopDistanceAdjust
 
       # Fake an obstacle for cruise, this ensures smooth acceleration to set speed
       # when the leads are no factor.
