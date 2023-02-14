@@ -139,7 +139,7 @@ class CarController:
     max_angle_frames = MAX_ANGLE_FRAMES - 2 if self.CP.carFingerprint in (CAR.HYUNDAI_GENESIS) else MAX_ANGLE_FRAMES
 
     torque_fault = CC.latActive and self.angle_limit_counter > max_angle_frames
-    lat_active = CC.latActive # and not torque_fault
+    lat_active = CC.latActive and not torque_fault
 
     if self.angle_limit_counter >= max_angle_frames + MAX_ANGLE_CONSECUTIVE_FRAMES:
       self.angle_limit_counter = 0
