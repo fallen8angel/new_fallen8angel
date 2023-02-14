@@ -497,8 +497,9 @@ class LongitudinalMpc:
         self.startSignCount = self.startSignCount + 1 if startSign else 0
         self.stopSignCount = self.stopSignCount + 1 if stopSign else 0
 
-        startSign = 1 if self.startSignCount > 0.3 * DT_MDL else 0
-        stopSign = 1 if self.stopSignCount > 0.3 * DT_MDL else 0
+        # trafficState: 2:StartSign, 1:StopSign, 0: Ignore
+        self.trafficState = 2 if self.startSignCount * DT_MDL > 0.3 else 0
+        self.trafficState = 1 if self.stopSignCount * DT_MDL > 0.3 else 0
 
         if self.xState == XState.e2eStop: # and abs(self.xStop - model_x) < 20.0:
           stopFilterX = self.xStopFilter.process(model_x, median = True)  # -v_ego는 longitudinalPlan에서 v_ego만큼 더해서 나옴.. 마지막에 급감속하는 문제가 발생..
@@ -510,7 +511,6 @@ class LongitudinalMpc:
           
         model_x = self.xStop
 
-        self.trafficState = 1 if self.stopSignCount*DT_MDL > 0.3 else 2 if self.startSignCount*DT_MDL > 0.3 else 0
         if self.e2ePaused:
           self.trafficState += 100  # 이렇게하면.... 이벤트발생이 안됨...
 
@@ -530,7 +530,7 @@ class LongitudinalMpc:
             v_cruise = 0.0
           if radarstate.leadOne.status and (radarstate.leadOne.dRel - model_x) < 2.0:
             self.xState = XState.lead
-          elif startSign == 1:  # 출발신호
+          elif self.trafficState == 2:  # 출발신호
             self.xState = XState.e2eCruise
             self.e2ePaused = True #출발신호가 나오면 이때부터 신호무시하자... 출발후 정지하는 경우가 생김..
           if carstate.gasPressed: # or cruiseButtonCounterDiff>0:       #예외: 정지중 accel을 밟으면 강제주행모드로 변경
@@ -543,13 +543,13 @@ class LongitudinalMpc:
             self.xState = XState.e2eCruise
             self.e2ePaused = True
           if cruiseButtonCounterDiff > 0:
-            self.xState = XState.e2eStop if stopSign == 1 else XState.e2eCruise
+            self.xState = XState.e2eStop if self.trafficState == 1 else XState.e2eCruise
             self.e2ePaused = False
         #E2E_CRUISE: 주행상태.
         else:
           if self.status:
             self.xState = XState.lead
-          elif stopSign == 1 and not self.e2ePaused:                 #신호인식이 되면 정지모드
+          elif self.trafficState == 1 and not self.e2ePaused:                 #신호인식이 되면 정지모드
             self.buttonStopDist = 0
             self.xState = XState.e2eStop
           else:
