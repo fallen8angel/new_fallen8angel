@@ -171,11 +171,11 @@ class Controls:
     self.state = State.disabled
     self.enabled = False
     self.active = False
-    self.can_rcv_timeout = False
     self.soft_disable_timer = 0
     self.mismatch_counter = 0
     self.cruise_mismatch_counter = 0
-    self.can_rcv_timeout_counter = 0
+    self.can_rcv_timeout_counter = 0      # conseuctive timeout count
+    self.can_rcv_cum_timeout_counter = 0  # cumulative timeout count
     self.last_blinker_frame = 0
     self.last_steering_pressed_frame = 0
     self.distance_traveled = 0
@@ -187,8 +187,8 @@ class Controls:
     self.steer_limited = False
     self.desired_curvature = 0.0
     self.desired_curvature_rate = 0.0
+    self.experimental_mode = False
     self.v_cruise_helper = VCruiseHelper(self.CP)
-    self.experimentalMode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
 
     #ajouatom
     self.cruise_helper = CruiseHelper()
@@ -204,6 +204,7 @@ class Controls:
 
     # TODO: no longer necessary, aside from process replay
     self.sm['liveParameters'].valid = True
+    self.can_log_mono_time = 0
 
     self.startup_event = get_startup_event(car_recognized, controller_available, len(self.CP.carFw) > 0)
 
@@ -374,9 +375,10 @@ class Controls:
       self.events.add(EventName.canError)
 
     # generic catch-all. ideally, a more specific event should be added above instead
+    can_rcv_timeout = self.can_rcv_timeout_counter >= 5
     has_disable_events = self.events.any(ET.NO_ENTRY) and (self.events.any(ET.SOFT_DISABLE) or self.events.any(ET.IMMEDIATE_DISABLE))
     no_system_errors = (not has_disable_events) or (len(self.events) == num_events)
-    if (not self.sm.all_checks() or self.can_rcv_timeout) and no_system_errors:
+    if (not self.sm.all_checks() or can_rcv_timeout) and no_system_errors:
       if not self.sm.all_alive():
         self.events.add(EventName.commIssue)
       elif not self.sm.all_freq_ok():
@@ -388,7 +390,7 @@ class Controls:
         'invalid': [s for s, valid in self.sm.valid.items() if not valid],
         'not_alive': [s for s, alive in self.sm.alive.items() if not alive],
         'not_freq_ok': [s for s, freq_ok in self.sm.freq_ok.items() if not freq_ok],
-        'can_rcv_timeout': self.can_rcv_timeout,
+        'can_rcv_timeout': can_rcv_timeout,
       }
       if logs != self.logged_comm_issue:
         cloudlog.event("commIssue", error=True, **logs)
@@ -459,6 +461,8 @@ class Controls:
     # Update carState from CAN
     can_strs = messaging.drain_sock_raw(self.can_sock, wait_for_one=True)
     CS = self.CI.update(self.CC, can_strs)
+    if len(can_strs) and REPLAY:
+      self.can_log_mono_time = messaging.log_from_bytes(can_strs[0]).logMonoTime
 
     self.sm.update(0)
 
@@ -476,9 +480,9 @@ class Controls:
     # Check for CAN timeout
     if not can_strs:
       self.can_rcv_timeout_counter += 1
-      self.can_rcv_timeout = True
+      self.can_rcv_cum_timeout_counter += 1
     else:
-      self.can_rcv_timeout = False
+      self.can_rcv_timeout_counter = 0
 
     # When the panda and controlsd do not agree on controls_allowed
     # we want to disengage openpilot. However the status from the panda goes through
@@ -594,7 +598,7 @@ class Controls:
           else:
             self.state = State.enabled
           self.current_alert_types.append(ET.ENABLE)
-          self.v_cruise_helper.initialize_v_cruise(CS)
+          self.v_cruise_helper.initialize_v_cruise(CS, self.experimental_mode)
           self.cruise_helper.longActiveUser = 0 
 
     # Check if openpilot is engaged and actuators are enabled
@@ -843,7 +847,8 @@ class Controls:
 
     if not self.read_only and self.initialized:
       # send car controls over can
-      self.last_actuators, can_sends = self.CI.apply(CC)
+      now_nanos = self.can_log_mono_time if REPLAY else int(sec_since_boot() * 1e9)
+      self.last_actuators, can_sends = self.CI.apply(CC, now_nanos)
       self.pm.send('sendcan', can_list_to_can_capnp(can_sends, msgtype='sendcan', valid=CS.canValid))
       CC.actuatorsOutput = self.last_actuators
       if self.CP.steerControlType == car.CarParams.SteerControlType.angle:
@@ -911,10 +916,8 @@ class Controls:
 
     controlsState.startMonoTime = int(start_time * 1e9)
     controlsState.forceDecel = bool(force_decel)
-    controlsState.canErrorCounter = self.can_rcv_timeout_counter
-    if not CC.longActive:
-      self.experimentalMode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
-    controlsState.experimentalMode = self.experimentalMode #self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
+    controlsState.canErrorCounter = self.can_rcv_cum_timeout_counter
+    controlsState.experimentalMode = self.experimental_mode
 
     lat_tuning = self.CP.lateralTuning.which()
     if self.joystick_mode:
@@ -965,6 +968,7 @@ class Controls:
     self.prof.checkpoint("Ratekeeper", ignore=True)
 
     self.is_metric = self.params.get_bool("IsMetric")
+    self.experimental_mode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
 
     # Sample data from sockets and get a carState
     CS = self.data_sample()

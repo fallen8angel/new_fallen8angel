@@ -531,7 +531,7 @@ class CruiseHelper:
         # 브레이크해제 켜지고, 크루즈갭이 5가 아닌경우에만 작동.
         elif self.autoResumeFromBrakeRelease and self.longCruiseGap != 5: # 브레이크 해제에 대한 크루즈 ON
           # 주행중, 전방차량이 20M(변수)이내이면
-          if resume_cond and v_ego_kph > 1.0 and 0 < self.autoResumeFromBrakeReleaseDist < dRel and CS.rightBlinker == False:
+          if resume_cond and v_ego_kph >= 3.0 and 0 < self.autoResumeFromBrakeReleaseDist < dRel and CS.rightBlinker == False:
             #v_cruise_kph = v_ego_kph_set  # 현재속도로 세트~
             self.cruise_control(controls, CS, 3)
           # 70km/h미만, 신호정지신호, 직선도로인경우

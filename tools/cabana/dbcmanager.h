@@ -22,7 +22,7 @@ public:
   ~DBCManager();
 
   void open(const QString &dbc_file_name);
-  void open(const QString &name, const QString &content);
+  bool open(const QString &name, const QString &content, QString *error = nullptr);
   QString generateDBC();
   void addSignal(const QString &id, const Signal &sig);
   void updateSignal(const QString &id, const QString &sig_name, const Signal &sig);
@@ -54,6 +54,8 @@ private:
   std::map<uint32_t, DBCMsg> msgs;
 };
 
+const QString UNTITLED = "untitled";
+
 // TODO: Add helper function in dbc.h
 double get_raw_value(uint8_t *data, size_t data_size, const Signal &sig);
 bool operator==(const Signal &l, const Signal &r);
@@ -63,7 +65,7 @@ int bigEndianBitIndex(int index);
 void updateSigSizeParamsFromRange(Signal &s, int start_bit, int size);
 std::pair<int, int> getSignalRange(const Signal *s);
 DBCManager *dbc();
-inline QString msgName(const QString &id, const char *def = "untitled") {
+inline QString msgName(const QString &id) {
   auto msg = dbc()->msg(id);
-  return msg ? msg->name : def;
+  return msg ? msg->name : UNTITLED;
 }
