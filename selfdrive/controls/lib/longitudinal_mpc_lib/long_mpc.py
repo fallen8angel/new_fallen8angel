@@ -498,8 +498,7 @@ class LongitudinalMpc:
         self.stopSignCount = self.stopSignCount + 1 if stopSign else 0
 
         # trafficState: 2:StartSign, 1:StopSign, 0: Ignore
-        self.trafficState = 2 if self.startSignCount * DT_MDL > 0.3 else 0
-        self.trafficState = 1 if self.stopSignCount * DT_MDL > 0.3 else 0
+        self.trafficState = 1 if self.stopSignCount * DT_MDL > 0.3 else 2 if self.startSignCount * DT_MDL > 0.3 else 0
 
         if self.xState == XState.e2eStop: # and abs(self.xStop - model_x) < 20.0:
           stopFilterX = self.xStopFilter.process(model_x, median = True)  # -v_ego는 longitudinalPlan에서 v_ego만큼 더해서 나옴.. 마지막에 급감속하는 문제가 발생..
@@ -561,7 +560,7 @@ class LongitudinalMpc:
         self.trafficState = 0
 
       fakeCruiseDistance = 0.0
-      if controls.longActiveUser <= 0:
+      if controls.longActiveUser <= 0 and self.xState != XState.softHold:
           self.xState = XState.cruise
 
       #3단계: 조건에 따른. 감속및 주행.
