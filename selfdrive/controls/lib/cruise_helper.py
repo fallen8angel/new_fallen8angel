@@ -306,7 +306,7 @@ class CruiseHelper:
           ButtonCnt = 0
       if ButtonCnt > 30:
         LongPressed = True
-        V_CRUISE_DELTA = 1
+        V_CRUISE_DELTA = 10
         if ButtonPrev == ButtonType.accelCruise:
           v_cruise_kph += V_CRUISE_DELTA - v_cruise_kph % V_CRUISE_DELTA
           button_type = ButtonType.accelCruise
