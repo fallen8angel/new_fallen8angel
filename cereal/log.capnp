@@ -805,6 +805,17 @@ struct ControlsState @0x97ff69c53601abf1 {
   steeringAngleDesiredDegDEPRECATED @29 :Float32;
   canMonoTimesDEPRECATED @21 :List(UInt64);
 }
+  
+# All SI units and in device frame
+struct XYZTData {
+  x @0 :List(Float32);
+  y @1 :List(Float32);
+  z @2 :List(Float32);
+  t @3 :List(Float32);
+  xStd @4 :List(Float32);
+  yStd @5 :List(Float32);
+  zStd @6 :List(Float32);
+}
 
 struct ModelDataV2 {
   frameId @0 :UInt32;
@@ -1031,6 +1042,9 @@ struct LongitudinalPlan @0xe00b5b3eba12876c {
     turning @2; # Actively turning. Managing acceleration to provide a roll on turn feeling.
     leaving @3; # Road ahead straightens. Start to allow positive acceleration.
   }
+}
+struct UiPlan {
+  position @0 :XYZTData;
 }
 
 struct LateralPlan @0xe1e9318e2ae8b51e {
@@ -2137,6 +2151,7 @@ struct Event {
     carControl @23 :Car.CarControl;
     longitudinalPlan @24 :LongitudinalPlan;
     lateralPlan @64 :LateralPlan;
+    uiPlan @106 :UiPlan;
     ubloxGnss @34 :UbloxGnss;
     ubloxRaw @39 :Data;
     qcomGnss @31 :QcomGnss;
