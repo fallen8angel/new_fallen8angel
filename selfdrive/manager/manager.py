@@ -89,6 +89,7 @@ def manager_init() -> None:
     ("CruiseMaxVals3", "50"),
     ("CruiseMaxVals4", "20"),
     ("CruiseMaxVals5", "15"),
+    ("CruiseMaxVals6", "15"),
     ("PrevCruiseGap", "4"),      
     ("CruiseSpeedMin", "10"),
     ("AutoSyncCruiseSpeedMax", "120"),       
