@@ -2202,7 +2202,7 @@ struct Event {
     userFlag @93 :UserFlag;
     uiDebug @102 :UIDebug;
     # neokii
-    roadLimitSpeed @106 :RoadLimitSpeed;
+    roadLimitSpeed @107 :RoadLimitSpeed;
 
     # *********** debug ***********
     testJoystick @52 :Joystick;
