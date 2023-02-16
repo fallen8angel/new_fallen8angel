@@ -850,16 +850,6 @@ struct ModelDataV2 {
   # Model perceived motion
   temporalPose @21 :Pose;
 
-  # All SI units and in device frame
-  struct XYZTData {
-    x @0 :List(Float32);
-    y @1 :List(Float32);
-    z @2 :List(Float32);
-    t @3 :List(Float32);
-    xStd @4 :List(Float32);
-    yStd @5 :List(Float32);
-    zStd @6 :List(Float32);
-  }
 
   struct LeadDataV2 {
     prob @0 :Float32; # probability that car is your lead at time t
