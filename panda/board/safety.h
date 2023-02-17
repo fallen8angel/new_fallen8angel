@@ -437,6 +437,9 @@ bool driver_limit_check(int val, int val_last, struct sample_t *val_driver,
                                            MIN(driver_min_limit, 0)));
 
   // check for violation
+  if ((val < lowest_allowed) || (val > highest_allowed)) {
+      print("driver_limit_check: "); puth(lowest_allowed); print(" < "); puth(val); print(" < "); puth(highest_allowed); print("\n");
+  }
   return (val < lowest_allowed) || (val > highest_allowed);
 }
 
