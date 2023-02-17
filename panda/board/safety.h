@@ -417,6 +417,10 @@ bool dist_to_meas_check(int val, int val_last, struct sample_t *val_meas,
   return (val < lowest_allowed) || (val > highest_allowed);
 }
 
+void _puth(int val) {
+    if (val < 0) { print("-"); val = -val; }
+    puth4(val);
+}
 // check that commanded value isn't fighting against driver
 bool driver_limit_check(int val, int val_last, struct sample_t *val_driver,
                         const int MAX_VAL, const int MAX_RATE_UP, const int MAX_RATE_DOWN,
@@ -438,7 +442,9 @@ bool driver_limit_check(int val, int val_last, struct sample_t *val_driver,
 
   // check for violation
   if ((val < lowest_allowed) || (val > highest_allowed)) {
-      print("driver_limit_check: "); puth(lowest_allowed); print(" < "); puth(val); print(" < "); puth(highest_allowed); print("\n");
+      print("driver_limit_check: "); _puth(lowest_allowed); print(" < "); _puth(val); print(" < "); _puth(highest_allowed); print("last="); _puth(val_last); print("\n");
+      print("hl_rl="); _puth(highest_allowed_rl); print(" ");  _puth(lowest_allowed_rl); print("\n");
+      print("dr_mx="); _puth(driver_max_limit); print(" ");  _puth(driver_min_limit); print("\n");
   }
   return (val < lowest_allowed) || (val > highest_allowed);
 }
