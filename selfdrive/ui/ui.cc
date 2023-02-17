@@ -253,9 +253,13 @@ UIState::UIState(QObject *parent) : QObject(parent) {
 }
 
 void UIState::update() {
+    printf("update1");
   update_sockets(this);
+  printf(" update2");
   update_state(this);
+  printf(" update3");
   updateStatus();
+  printf(" update4\n");
 
   if (sm->frame % UI_FREQ == 0) {
     watchdog_kick(nanos_since_boot());
