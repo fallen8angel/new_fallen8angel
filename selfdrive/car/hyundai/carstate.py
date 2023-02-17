@@ -605,7 +605,7 @@ class CarState(CarStateBase):
         ("SCC11", 50),
         ("SCC12", 50),
       ]
-      if CP.carFingerprint in FEATURES["use_fca"]:
+      if CP.flags & HyundaiFlags.USE_FCA.value:
         signals += [
           ("CF_VSM_Prefill", "FCA11"),
           ("CF_VSM_HBACmd", "FCA11"),
