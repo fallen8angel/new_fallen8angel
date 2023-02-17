@@ -258,7 +258,6 @@ void UIState::update() {
   updateStatus();
 
   if (sm->frame % UI_FREQ == 0) {
-      printf("watchdog_kick......!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     watchdog_kick(nanos_since_boot());
   }
   emit uiUpdate(*this);
