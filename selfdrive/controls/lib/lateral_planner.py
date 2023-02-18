@@ -55,7 +55,7 @@ class LateralPlanner:
     self.lat_mpc = LateralMpc()
     self.reset_mpc(np.zeros(4))
 
-    self.steeringRateCost = 800.
+    self.steeringRateCost = 700.
 
   def reset_mpc(self, x0=np.zeros(4)):
     self.x0 = x0
