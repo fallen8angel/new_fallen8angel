@@ -605,8 +605,8 @@ bool steer_torque_cmd_checks(int desired_torque, int steer_req, const SteeringLi
   if (violation || !controls_allowed) {
     valid_steer_req_count = 0;
     invalid_steer_req_count = 0;
-    //desired_torque_last = 0;  // violation이 나오더라도... 과거값은 현재값이되야지? 안그러면... 0 이될때까지 계속에러?  test...
-    //rt_torque_last = 0;
+    desired_torque_last = 0;
+    rt_torque_last = 0;
     ts_torque_check_last = ts;
     ts_steer_req_mismatch_last = ts;
   }
