@@ -640,7 +640,7 @@ void AnnotatedCameraWidget::drawHud(QPainter &p, const cereal::ModelDataV2::Read
   int TRsign_w = 140;
   int TRsign_h = 250;
   int TRsign_x = 65;
-  int TRsign_y = 550;
+  int TRsign_y = 545;
 
   p.setOpacity(0.8);
   if (lp.getTrafficState() >= 100) {
