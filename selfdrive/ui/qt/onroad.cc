@@ -355,20 +355,20 @@ void AnnotatedCameraWidget::drawLaneLines(QPainter &painter, const UIState *s) {
     float prob = std::clamp<float>(scene.lane_line_probs[i]*2.0, 0.5, 1.0);
     painter.setBrush(QColor::fromRgbF(1.0, 1.0, 1.0, prob));
     //painter.setBrush(QColor::fromRgbF(1.0, 1.0, 1.0, std::clamp<float>(scene.lane_line_probs[i], 0.0, 0.7)));
-    painter.drawPolygon(scene.lane_line_vertices[i].v, scene.lane_line_vertices[i].cnt);
+    painter.drawPolygon(scene.lane_line_vertices[i]);
   }
 	
   // TODO: Fix empty spaces when curiving back on itself
   painter.setBrush(QColor(255, 215, 000, 150));
-  if (left_blindspot) painter.drawPolygon(scene.lane_barrier_vertices[0].v, scene.lane_barrier_vertices[0].cnt);
-  if (right_blindspot) painter.drawPolygon(scene.lane_barrier_vertices[1].v, scene.lane_barrier_vertices[1].cnt);
+  if (left_blindspot) painter.drawPolygon(scene.lane_barrier_vertices[0]);
+  if (right_blindspot) painter.drawPolygon(scene.lane_barrier_vertices[1]);
 
   // road edges
   for (int i = 0; i < std::size(scene.road_edge_vertices); ++i) {
       float prob = std::clamp<float>((2.0 - scene.road_edge_stds[i])*2.0, 0.5, 1.0);
       painter.setBrush(QColor::fromRgbF(1.0, 0, 1.0, prob));
       //painter.setBrush(QColor::fromRgbF(1.0, 0, 1.0, std::clamp<float>(1.0 - scene.road_edge_stds[i], 0.0, 1.0)));
-      painter.drawPolygon(scene.road_edge_vertices[i].v, scene.road_edge_vertices[i].cnt);
+      painter.drawPolygon(scene.road_edge_vertices[i]);
   }
 
   // paint path
