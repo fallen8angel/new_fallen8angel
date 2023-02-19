@@ -335,9 +335,14 @@ void AnnotatedCameraWidget::updateFrameMat() {
 }
 
 float lerp(float a, float b, float t) {
-    return a + t * (b - a);
+  return a + t * (b - a);
 }
 
+float interp1d(float value, float start_min, float start_max, float end_min, float end_max) {
+  value = std::max(start_min, std::min(start_max, value));
+  float factor = (value - start_min) / (start_max - start_min);
+  return end_min + factor * (end_max - end_min);
+}
 
 void AnnotatedCameraWidget::drawLaneLines(QPainter &painter, const UIState *s) {
   painter.save();
@@ -367,29 +372,78 @@ void AnnotatedCameraWidget::drawLaneLines(QPainter &painter, const UIState *s) {
   }
 
   // paint path
-  QLinearGradient bg(0, height(), 0, height() / 4);
+//  QLinearGradient bg(0, height(), 0, height() / 4);
+  QLinearGradient bg(0, height(), 0, 0);
   float start_hue, end_hue;
   if (sm["controlsState"].getControlsState().getExperimentalMode()) {
-    const auto &acceleration = sm["modelV2"].getModelV2().getAcceleration();
-    float acceleration_future = 0;
-    if (acceleration.getZ().size() > 16) {
-      acceleration_future = acceleration.getX()[16];  // 2.5 seconds
+
+    int track_vertices_len = scene.track_vertices.length();
+    assert(track_vertices_len % 2 == 0);
+    QVector<QPointF> right_points = scene.track_vertices.mid(0, track_vertices_len / 2);
+    qDebug() << right_points.length();
+    float max_gradient_point = 1.0;
+    if (right_points.length() > 0) {
+//      bg.setFinalStop(right_points[right_points.length() - 1]);
+      max_gradient_point = (height() - right_points[right_points.length() - 1].y()) / height();
+      qDebug() << "max_gradient_point:" << max_gradient_point;
     }
-    start_hue = 60;
-    // speed up: 120, slow down: 0
-    end_hue = fmax(fmin(start_hue + acceleration_future * 45, 148), 0);
+//    float gradient_height = bg.finalStop().y();
+    for (int i = 0; i < right_points.length(); i++) {
+      const auto &acceleration = sm["uiPlan"].getUiPlan().getAccel();
+      float acceleration_future = 0;
+      if (i > acceleration.size()) {
+        break;
+      }
+      acceleration_future = acceleration[i];
+      qDebug() << "Using acceleration:" << acceleration_future;
 
-    float saturation = lerp(0, 1, pow(std::abs(2 * acceleration_future), 2) / 3);
-    saturation = saturation > 1 ? 1. : saturation;
-    float lightness = lerp(0.9, 0.72, saturation);
-    qDebug() << "saturation:" << saturation << "lightness:" << lightness;
+      // need to flip so 0 is bottom of frame (not really, can also flip linear gradient above)
+      float lin_grad_point = (height() - right_points[i].y()) / height();
+      qDebug() << right_points[i] << right_points[i].y() << lin_grad_point;
+      // Some points are out of frame
+      // TODO: tho maybe it makes sense to clip instead, so gradient is correct. or no clip/skip at all
+      if (lin_grad_point < 0) {
+        continue;
+      }
 
-    // FIXME: painter.drawPolygon can be slow if hue is not rounded
-    end_hue = int(end_hue * 100 + 0.5) / 100;
+      start_hue = 60;
+      // speed up: 120, slow down: 0
+      end_hue = fmax(fmin(start_hue + acceleration_future * 35, 148), 0);
 
-    bg.setColorAt(0.0, QColor::fromHslF(start_hue / 360., saturation, 0.62, 0.45));
-    bg.setColorAt(0.5, QColor::fromHslF(end_hue / 360., saturation, lightness, 0.4));
-    bg.setColorAt(1.0, QColor::fromHslF(end_hue / 360., saturation, lightness, 0.0));
+      float saturation = lerp(0, 1, pow(std::abs(3 * acceleration_future), 2) / 3);
+//      float saturation = pow(std::abs(acceleration_future), 2);
+      saturation = saturation > 1 ? 1. : saturation;
+      float lightness = lerp(0.95, 0.62, saturation);
+//      lightness = lerp(0.56, 0.88, lin_grad_point);
+//      float alpha_lerp = (lin_grad_point - 0.5) * 2;  // ramp alpha down from 0.4 when point reached 0.5
+//      float alpha = lerp(0.4, 0, alpha_lerp > 0 ? alpha_lerp : 0);
+//      float alpha = interp1d(lin_grad_point, max_gradient_point / 2., max_gradient_point, 0.4, 0.0);  // looks cool, but fades off too early
+      float alpha = interp1d(lin_grad_point, 0.375, 0.625, 0.4, 0.0);  // matches behavior before for alpha fade
+      qDebug() << "saturation:" << saturation << "lightness:" << lightness << "alpha:" << alpha;
+
+      // FIXME: painter.drawPolygon can be slow if hue is not rounded
+      end_hue = int(end_hue * 100 + 0.5) / 100;
+//      bg.setColorAt(lin_grad_point, QColor::fromHslF(end_hue / 360., 0.97, 0.56, 0.4));
+      bg.setColorAt(lin_grad_point, QColor::fromHslF(end_hue / 360., saturation, lightness, alpha));
+
+    }
+//    qDebug() << right_points;
+
+//    const auto &acceleration = sm["modelV2"].getModelV2().getAcceleration();
+//    float acceleration_future = 0;
+//    if (acceleration.getZ().size() > 16) {
+//      acceleration_future = acceleration.getX()[16];  // 2.5 seconds
+//    }
+//    start_hue = 60;
+//    // speed up: 120, slow down: 0
+//    end_hue = fmax(fmin(start_hue + acceleration_future * 45, 148), 0);
+//
+//    // FIXME: painter.drawPolygon can be slow if hue is not rounded
+//    end_hue = int(end_hue * 100 + 0.5) / 100;
+//
+//    bg.setColorAt(0.0, QColor::fromHslF(start_hue / 360., 0.97, 0.56, 0.4));
+//    bg.setColorAt(0.5, QColor::fromHslF(end_hue / 360., 1.0, 0.68, 0.35));
+//    bg.setColorAt(1.0, QColor::fromHslF(end_hue / 360., 1.0, 0.68, 0.0));
   } else {
     bg.setColorAt(0.0, QColor::fromHslF(148 / 360., 0.94, 0.51, 0.4));
     bg.setColorAt(0.5, QColor::fromHslF(112 / 360., 1.0, 0.68, 0.35));
