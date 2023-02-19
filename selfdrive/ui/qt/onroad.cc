@@ -451,7 +451,7 @@ void AnnotatedCameraWidget::drawLaneLines(QPainter &painter, const UIState *s) {
   }
 
   painter.setBrush(bg);
-  painter.drawPolygon(scene.track_vertices.v, scene.track_vertices.cnt);
+  painter.drawPolygon(scene.track_vertices);
 
   painter.restore();
 }
