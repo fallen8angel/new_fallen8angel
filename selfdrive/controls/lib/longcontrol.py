@@ -68,6 +68,7 @@ class LongControl:
     self.longitudinalTuningKpV = 1.0
     self.startAccelApply = 0.0
     self.stopAccelApply = 0.0
+    self.stoppingDecelRate = 0.01
 
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
@@ -86,7 +87,7 @@ class LongControl:
       self.CP.longitudinalTuning.kiV = [self.longitudinalTuningKiV]
       self.pid._k_p = (self.CP.longitudinalTuning.kpBP, self.CP.longitudinalTuning.kpV)
     elif self.readParamCount == 30:
-      pass
+      self.stoppingDecelRate = float(int(Params().get("StoppingDecelRate", encoding="utf8"))) * 0.01
     elif self.readParamCount == 40:
       self.startAccelApply = float(int(Params().get("StartAccelApply", encoding="utf8"))) * 0.01
       self.stopAccelApply = float(int(Params().get("StopAccelApply", encoding="utf8"))) * 0.01
@@ -138,7 +139,8 @@ class LongControl:
     elif self.long_control_state == LongCtrlState.stopping:
       if output_accel > self.CP.stopAccel:
         output_accel = min(output_accel, 0.0)
-        output_accel -= self.CP.stoppingDecelRate * DT_CTRL
+        #output_accel -= self.CP.stoppingDecelRate * DT_CTRL
+        output_accel -= self.stoppingDecelRate * DT_CTRL
         if CC.hudControl.softHold:
           output_accel = self.CP.stopAccel
       self.reset(CS.vEgo)

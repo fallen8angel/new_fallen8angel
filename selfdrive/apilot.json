@@ -562,6 +562,26 @@
       "unit": 10
     },
     {
+      "group": "정지",
+      "name": "StartAccelApply",
+      "title": "가속초기속도2.0x(0%)",
+      "descr": "정지->출발시 가속도의 가속율을 지정",
+      "min": 0,
+      "max": 100,
+      "default": 0,
+      "unit": 10
+    },
+    {
+      "group": "정지",
+      "name": "StoppingDecelRate",
+      "title": "정지유지브레이크율x0.01(10)",
+      "descr": "정지유지 브레이크율을 조정, 갑작스런 급정지 방지효과??",
+      "min": 1,
+      "max": 900,
+      "default": 10,
+      "unit": 1
+    },
+    {
       "group": "시작",
       "name": "InitMyDrivingMode",
       "title": "드라이브모드:초기값(3)",
