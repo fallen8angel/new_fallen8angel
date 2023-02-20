@@ -526,7 +526,7 @@ class CruiseHelper:
       # 브레이크해제시
       elif not CS.brakePressed and self.preBrakePressed:
         # 정지상태, 소프트홀드일때 크루즈 ON
-        if v_ego_kph < 5.0 and xState == XState.softHold:
+        if v_ego_kph < 5.0 and xState == XState.softHold and self.longCruiseGap != 5:
           self.cruise_control(controls, CS, 3)
         # 브레이크해제 켜지고, 크루즈갭이 5가 아닌경우에만 작동.
         elif self.autoResumeFromBrakeRelease and self.longCruiseGap != 5: # 브레이크 해제에 대한 크루즈 ON
